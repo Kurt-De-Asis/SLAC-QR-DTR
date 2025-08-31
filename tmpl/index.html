@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>SLAC • DTR & Payroll</title>
+  <style>
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      margin: 0;
+      background: #f8fff9;
+      color: #1b4332;
+    }
+  header {
+      background: #1b4332;
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      justify-content: flex-start;
+      position: relative;
+    }
+    header img {
+      height: 50px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+    .container { padding: 20px; }
+    .row{display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap;}
+    .card{
+      border:1px solid #a3b18a;
+      border-radius:12px;
+      padding:16px;
+      background:white;
+      box-shadow:0 2px 6px rgba(0,0,0,.08);
+      flex:1;
+      min-width:320px;
+    }
+    h2{color:#2d6a4f;}
+    table{border-collapse: collapse; width:100%;}
+    th,td{border:1px solid #ddd; padding:8px;}
+    th{background:#d8f3dc; text-align:left;}
+    input,select,button{
+      padding:8px 10px;
+      border-radius:8px;
+      border:1px solid #ccc
+    }
+    button{
+      cursor:pointer;
+      background:#2d6a4f;
+      color:white;
+      border:none;
+      transition:.2s;
+    }
+    button:hover{background:#40916c;}
+    .muted{color:#666}
+    .pill{padding:3px 8px; border-radius:999px; font-size:12px; border:1px solid #ddd}
+    .active{background:#d8f3dc; border-color:#74c69d; color:#1b4332;}
+    .inactive{background:#fff3cd; border-color:#facc15; color:#7c6f00;}
+  </style>
+</head>
+<body>
+  <header>
+    <img src="/img/slac_logo.png" style="margin-right: 12px;"/>
+    <h1>St. Louis Anne Colleges • DTR & Payroll</h1>
+    <form method="post" action="/logout" style="position:absolute; right:20px; top:50%; transform: translateY(-50%); margin:0;">
+      <button type="submit" style="background:#7c0000; padding:12px 20px; border-radius:8px; color:white; border:none; cursor:pointer; font-size:16px;">Logout</button>
+    </form>
+  </header>
+  <div class="container">
+    <p class="muted">Timezone: Asia/Manila • Today: {{.Today}}</p>
+
+    <div class="row">
+      <div class="card">
+        <h2>Add Faculty</h2>
+        <form method="post" action="/faculty/add">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; max-width:520px;">
+            <input name="name" placeholder="Full name" required>
+            <input name="role" placeholder="Role/Department (optional)"/>
+            <input name="rate" type="number" step="0.01" placeholder="Rate per hour (₱)" required>
+          </div>
+          <p><button type="submit">+ Add Faculty</button></p>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Printable QR Cards</h2>
+        <p>Print cards for scanning.</p>
+        <p><a href="/print-qrs.pdf" target="_blank"><button>🖨️ Open QR Cards PDF</button></a></p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <h2>Faculty Registry</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Name</th><th>Role</th><th>Rate/hr</th><th>Status</th><th>QR</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Faculty}}
+          <tr>
+            <td>{{.ID}}</td>
+            <td>{{.Name}}</td>
+            <td>{{.Role}}</td>
+            <td>₱{{printf "%.2f" .RatePerHour}}</td>
+            <td>
+              {{if .Active}}<span class="pill active">active</span>{{else}}<span class="pill inactive">inactive</span>{{end}}
+            </td>
+            <td>
+              <img src="/qrs/{{.Token}}.png" alt="qr" width="80" height="80"/>
+            </td>
+            <td>
+              <form method="post" action="/faculty/toggle" style="display:inline-block; margin-right: 8px;" onsubmit="return toggleFaculty(event, this);">
+                <input type="hidden" name="id" value="{{.ID}}"/>
+                <button type="submit">{{if .Active}}Deactivate{{else}}Activate{{end}}</button>
+              </form>
+              <form method="post" action="/faculty/delete" style="display:inline-block; margin-right: 8px;">
+                <input type="hidden" name="id" value="{{.ID}}"/>
+                <button type="submit" style="background:#b22222; border:none; color:white; border-radius: 4px; padding: 6px 12px; cursor:pointer;">Delete</button>
+              </form>
+              <a href="/scan/{{.Token}}" target="_blank"><button>Test Scan</button></a>
+
+<script>
+async function toggleFaculty(event, form) {
+  event.preventDefault();
+  const formData = new FormData(form);
+  const response = await fetch(form.action, {
+    method: 'POST',
+    body: formData,
+  });
+  if (response.ok) {
+    // Reload the page to reflect changes
+    window.location.reload();
+  } else {
+    alert('Failed to toggle faculty status');
+  }
+  return false;
+}
+</script>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <h2>Payroll</h2>
+      <form method="get" action="/payroll">
+        <label>Start: <input type="date" name="start" required></label>
+        <label>End: <input type="date" name="end" required></label>
+        <button type="submit">Compute</button>
+      </form>
+    </div>
+
+    <p class="muted" style="margin-top:20px">Tip: On your scanner app, set the scan action to open the URL. Each scan toggles IN/OUT.</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Payroll</title>
+  <style>
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      margin: 0;
+      background: #f8fff9;
+      color: #1b4332;
+    }
+  header {
+      background: #1b4332;
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      justify-content: flex-start;
+      position: relative;
+    }
+    h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+    a.button {
+      background: #2d6a4f;
+      color: white;
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    a.button:hover {
+      background: #40916c;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,.08);
+    }
+    th,td {
+      border:1px solid #a3b18a;
+      padding:8px;
+    }
+    th {
+      background:#d8f3dc;
+      text-align:left;
+    }
+    tfoot th {
+      background: #f9f9f9;
+    }
+  </style>
+  </head>
+  <body>
+    <header>
+      <img src="/img/slac_logo.png" style="height: 50px; margin-right: 12px;"/>
+      <h1>Payroll — {{.Start}} to {{.End}}</h1>
+      <form method="post" action="/logout" style="position:absolute; right:20px; top:50%; transform: translateY(-50%); margin:0;">
+        <button type="submit" style="background:#7c0000; padding:12px 20px; border-radius:8px; color:white; border:none; cursor:pointer; font-size:16px;">Logout</button>
+      </form>
+    </header>
+
+  <p>
+    <a href="/" class="button">← Back</a>
+    <a href="/payroll.csv?start={{.Start}}&end={{.End}}" class="button">Download CSV</a>
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Faculty ID</th>
+        <th>Name</th>
+        <th>Role</th>
+        <th>Rate/hr (₱)</th>
+        <th>Total Hours</th>
+        <th>Pay (₱)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Rows}}
+      <tr>
+        <td>{{.FacultyID}}</td>
+        <td>{{.Name}}</td>
+        <td>{{.Role}}</td>
+        <td>{{printf "%.2f" .RatePerHour}}</td>
+        <td>{{printf "%.2f" .TotalHours}}</td>
+        <td>{{printf "%.2f" .Pay}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+    <tfoot>
+      <tr>
+        <th colspan="5" style="text-align:right">Grand Total</th>
+        <th>₱{{printf "%.2f" .GrandTotal}}</th>
+      </tr>
+    </tfoot>
+  </table>
+</body>
+</html>
